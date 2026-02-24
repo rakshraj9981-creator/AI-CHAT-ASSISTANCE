@@ -25,7 +25,7 @@ st.write("Chat with Gemini in a ChatGPT-like interface.")
 
 # ------------------ API KEY ------------------
 # Option 1 (Recommended): Use environment variable
-API_KEY = os.getenv("GEMINI_API_KEY")
+API_KEY = st.secrets["GEMINI_API_KEY"]
 
 # Option 2 (If testing locally only)
 # API_KEY = "PASTE_YOUR_API_KEY_HERE"
