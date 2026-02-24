@@ -7,7 +7,7 @@ Original file is located at
     https://colab.research.google.com/drive/1W1guPczOE_SoGlY3lIKKqjCyfkbSDA4W
 """
 
-pip install streamlit google-generativeai
+
 
 import streamlit as st
 import google.generativeai as genai
@@ -77,5 +77,3 @@ if user_input:
     )
 
 
-
-! streamlit run app.py & npx localtunnel --port 8501
