@@ -8,72 +8,41 @@ Original file is located at
 """
 
 
-
 import streamlit as st
-import google.generativeai as genai
-import os
+from google import genai
 
-# ------------------ PAGE CONFIG ------------------
-st.set_page_config(
-    page_title="Gemini AI Assistant",
-    page_icon="🤖",
-    layout="centered"
-)
+st.set_page_config(page_title="Gemini AI Assistant")
 
 st.title("🤖 Gemini AI Assistant")
-st.write("Chat with Gemini in a ChatGPT-like interface.")
 
-# ------------------ API KEY ------------------
-# Option 1 (Recommended): Use environment variable
+# Use Streamlit Secrets
 API_KEY = st.secrets["GEMINI_API_KEY"]
 
-# Option 2 (If testing locally only)
-# API_KEY = "PASTE_YOUR_API_KEY_HERE"
+client = genai.Client(api_key=API_KEY)
 
-if not API_KEY:
-    st.error("❌ API Key not found. Set GEMINI_API_KEY environment variable.")
-    st.stop()
-
-genai.configure(api_key=API_KEY)
-
-model = genai.GenerativeModel("models/gemini-1.5-flash")
-
-# ------------------ SESSION STATE ------------------
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# ------------------ CLEAR CHAT BUTTON ------------------
-if st.button("🗑 Clear Chat"):
-    st.session_state.messages = []
-    st.rerun()
-
-# ------------------ DISPLAY CHAT HISTORY ------------------
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# ------------------ USER INPUT ------------------
 user_input = st.chat_input("Type your message...")
 
 if user_input:
-    # Add user message
-    st.session_state.messages.append(
-        {"role": "user", "content": user_input}
-    )
-
+    st.session_state.messages.append({"role": "user", "content": user_input})
     with st.chat_message("user"):
         st.markdown(user_input)
 
-    # Generate response
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            response = model.generate_content(user_input)
+            response = client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=user_input,
+            )
             reply = response.text
             st.markdown(reply)
 
-    # Save assistant response
-    st.session_state.messages.append(
-        {"role": "assistant", "content": reply}
-    )
+    st.session_state.messages.append({"role": "assistant", "content": reply})
 
 
