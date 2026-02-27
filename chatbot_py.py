@@ -11,38 +11,89 @@ Original file is located at
 import streamlit as st
 from google import genai
 
-st.set_page_config(page_title="Gemini AI Assistant")
+# -----------------------------------
+# PAGE CONFIG
+# -----------------------------------
+st.set_page_config(
+    page_title="Gemini Advanced AI Assistant",
+    page_icon="🤖",
+    layout="wide"
+)
 
-st.title("🤖 Gemini AI Assistant")
+st.title("🤖 Gemini Advanced AI Assistant")
 
-# Use Streamlit Secrets
+# -----------------------------------
+# LOAD API KEY FROM STREAMLIT SECRETS
+# -----------------------------------
 API_KEY = st.secrets["GEMINI_API_KEY"]
-
 client = genai.Client(api_key=API_KEY)
 
+# -----------------------------------
+# SIDEBAR SETTINGS
+# -----------------------------------
+st.sidebar.header("⚙️ Model Settings")
+
+# List available models dynamically
+models = []
+for m in client.models.list():
+    if "generateContent" in m.supported_actions:
+        models.append(m.name)
+
+selected_model = st.sidebar.selectbox(
+    "Select Model",
+    models
+)
+
+temperature = st.sidebar.slider("Temperature", 0.0, 1.0, 0.7)
+top_p = st.sidebar.slider("Top P", 0.0, 1.0, 0.9)
+max_tokens = st.sidebar.slider("Max Output Tokens", 100, 2048, 512)
+
+if st.sidebar.button("🗑 Clear Chat"):
+    st.session_state.messages = []
+    st.rerun()
+
+# -----------------------------------
+# SESSION STATE
+# -----------------------------------
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# -----------------------------------
+# DISPLAY CHAT HISTORY
+# -----------------------------------
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
+# -----------------------------------
+# USER INPUT
+# -----------------------------------
 user_input = st.chat_input("Type your message...")
 
 if user_input:
-    st.session_state.messages.append({"role": "user", "content": user_input})
+    st.session_state.messages.append(
+        {"role": "user", "content": user_input}
+    )
+
     with st.chat_message("user"):
         st.markdown(user_input)
 
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
+
             response = client.models.generate_content(
-                model="gemini-1.5-flash",
+                model=selected_model,
                 contents=user_input,
+                config={
+                    "temperature": temperature,
+                    "top_p": top_p,
+                    "max_output_tokens": max_tokens,
+                }
             )
+
             reply = response.text
             st.markdown(reply)
 
-    st.session_state.messages.append({"role": "assistant", "content": reply})
-
-
+    st.session_state.messages.append(
+        {"role": "assistant", "content": reply}
+    )
